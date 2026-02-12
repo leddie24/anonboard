@@ -3,6 +3,7 @@ import VoteButtons from "@/components/VoteButtons";
 import { generateAnonName } from "@/lib/generateAnonName";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { notFound } from "next/navigation";
 
 export default async function BoardPage({
   params,
@@ -28,6 +29,10 @@ export default async function BoardPage({
     .select()
     .eq("board_id", id);
 
+  if (boardError) {
+    notFound();
+  }
+
   const postIds = posts?.map((post) => post.id) ?? [];
   const { data: votes } = await supabase
     .from("votes")
@@ -45,7 +50,7 @@ export default async function BoardPage({
     if (!user) return;
     const anonymousName = generateAnonName(user.id, id);
     const content = formData.get("newPost") as string;
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("posts")
       .insert({ board_id: id, content, anonymous_name: anonymousName })
       .select()
@@ -64,10 +69,7 @@ export default async function BoardPage({
 
     const supabase = await createClient();
     const postId = formData.get("postId") as string;
-    const { data, error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", postId);
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
 
     if (error) {
       console.log(error.message);
@@ -116,7 +118,14 @@ export default async function BoardPage({
         </div>
 
         <div className="mb-12">
-          {posts && !posts.length ? (
+          {postsError ? (
+            <div
+              role="alert"
+              className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500"
+            >
+              {postsError.message}
+            </div>
+          ) : !posts.length ? (
             <p className="text-neutral-500">No posts yet!</p>
           ) : (
             posts?.map((post) => {
