@@ -6,6 +6,7 @@ import React, { ChangeEvent } from "react";
 
 const Login = () => {
   const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState<string | null>(null);
   const [formData, setFormData] = React.useState({
     email: "",
     password: "",
@@ -32,9 +33,10 @@ const Login = () => {
   const isButtonsDisabled = !formData.email || !formData.password;
 
   const handleSignup = async () => {
+    setSuccess(null);
+    setError(null);
     const { email, password } = formData;
-    const { error } = await supabase.auth.signUp({ email, password });
-
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       setError(error.message);
       setTimeout(() => {
@@ -43,8 +45,13 @@ const Login = () => {
         }
       }, 10000);
       return;
+    } else {
+      if (!data.session) {
+        setSuccess("Check your email for a confirmation link");
+      } else {
+        router.push("/");
+      }
     }
-    router.push("/");
   };
 
   const handleLogin = async () => {
@@ -78,6 +85,15 @@ const Login = () => {
             className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500"
           >
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div
+            role="alert"
+            className="mb-6 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-500"
+          >
+            {success}
           </div>
         )}
 
