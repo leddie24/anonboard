@@ -57,22 +57,32 @@ export default function VoteButtons({
   };
 
   return (
-    <div>
+    <div className="flex items-center gap-2">
       <button
         type="button"
         onClick={() => handleVote(1)}
-        className={`border border-red-200 p-3 ${userVote === 1 ? `border-red-900` : ""}`}
+        className={`rounded-md border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+          userVote === 1
+            ? "border-white/30 bg-white/10 text-white"
+            : "border-neutral-800 bg-transparent text-neutral-400 hover:border-neutral-600 hover:bg-neutral-950 hover:text-white"
+        }`}
       >
         +1
       </button>
+      <span className="min-w-8 text-center text-sm font-semibold text-white">
+        {voteCount}
+      </span>
       <button
         type="button"
         onClick={() => handleVote(-1)}
-        className={`border border-red-200 p-3 ${userVote === -1 ? `border-red-900` : ""}`}
+        className={`rounded-md border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+          userVote === -1
+            ? "border-white/30 bg-white/10 text-white"
+            : "border-neutral-800 bg-transparent text-neutral-400 hover:border-neutral-600 hover:bg-neutral-950 hover:text-white"
+        }`}
       >
         -1
       </button>
-      <div>Votes: {voteCount}</div>
     </div>
   );
 }

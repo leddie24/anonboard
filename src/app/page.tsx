@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
@@ -8,79 +7,55 @@ export default async function Home() {
   } = await supabase.auth.getUser();
 
   return (
-    <div className="flex min-h-screen items-center justify-center font-san dark:bg-neutral-950">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-center py-32 px-16">
-        <h1 className="text-6xl font-bold mb-12">AnonBoard</h1>
+    <div className="flex min-h-screen items-center justify-center">
+      <main className="flex w-full max-w-3xl flex-col items-center px-8 py-32">
+        <h1 className="mb-12 text-6xl font-bold tracking-tight">AnonBoard</h1>
 
-        <div className="flex flex-col items-center mb-10">
-          <div>Create an anonymous message board.</div>
-          <div>Share the link.</div>
-          <div>Get honest feedback.</div>
+        <div className="mb-10 flex flex-col items-center gap-1 text-neutral-400">
+          <span>Create an anonymous message board.</span>
+          <span>Share the link.</span>
+          <span>Get honest feedback.</span>
         </div>
 
         <a
-          className="rounded-full px-6 py-3 font-medium
-                   bg-neutral-900 text-white hover:bg-neutral-800
-                   dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          className="rounded-full bg-white px-8 py-3 text-[15px] font-medium text-neutral-950 transition-colors hover:bg-neutral-200"
           href={!user ? "/login" : "/create"}
         >
           Create a board
         </a>
 
-        <div className="flex flex-col mt-40">
-          <div className="flex items-center gap-4 w-full mb-8">
-            <div className="flex-1 h-px bg-neutral-700" />
-            <span className="text-neutral-400 text-sm">How it works</span>
-            <div className="flex-1 h-px bg-neutral-700" />
+        <div className="mt-40 flex w-full flex-col">
+          <div className="mb-8 flex w-full items-center gap-4">
+            <div className="h-px flex-1 bg-neutral-800" />
+            <span className="text-sm text-neutral-500">How it works</span>
+            <div className="h-px flex-1 bg-neutral-800" />
           </div>
-          <div className="flex gap-10">
-            <div
-              className="rounded-xl border border-neutral-200 bg-neutral-50 p-6
-                dark:border-neutral-800 dark:bg-neutral-900"
-            >
-              <div>1. Create a board</div>
 
-              <Image
-                className="dark:invert"
-                src="/vercel.svg"
-                alt="Next.js logo"
-                width={80}
-                height={80}
-                priority
-              />
-              <div>Set up an anonymous board.</div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+              <div className="mb-3 text-3xl">1</div>
+              <div className="mb-2 font-semibold">Create a board</div>
+              <div className="text-sm text-neutral-500">
+                Set up an anonymous board in seconds.
+              </div>
             </div>
-            <div
-              className="rounded-xl border border-neutral-200 bg-neutral-50 p-6
-                dark:border-neutral-800 dark:bg-neutral-900"
-            >
-              <div>2. Share the link</div>
 
-              <Image
-                className="dark:invert"
-                src="/vercel.svg"
-                alt="Next.js logo"
-                width={80}
-                height={80}
-                priority
-              />
-              <div>Send the link to others.</div>
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+              <div className="mb-3 text-3xl">2</div>
+              <div className="mb-2 font-semibold">Share the link</div>
+              <div className="text-sm text-neutral-500">
+                Send the link to anyone you want feedback from.
+              </div>
             </div>
-            <div
-              className="rounded-xl border border-neutral-200 bg-neutral-50 p-6
-                dark:border-neutral-800 dark:bg-neutral-900"
-            >
-              <div>3. Get anonymous posts & votes</div>
 
-              <Image
-                className="dark:invert"
-                src="/vercel.svg"
-                alt="Next.js logo"
-                width={80}
-                height={80}
-                priority
-              />
-              <div>Receive honest feedback.</div>
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+              <div className="mb-3 text-3xl">3</div>
+              <div className="mb-2 font-semibold">
+                Get anonymous posts &amp; votes
+              </div>
+              <div className="text-sm text-neutral-500">
+                Receive honest, unfiltered feedback.
+              </div>
             </div>
           </div>
         </div>

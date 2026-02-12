@@ -95,43 +95,79 @@ export default async function BoardPage({
     return (
       <form action={deletePost}>
         <input type="hidden" value={postId} name="postId" readOnly />
-        <button type="submit">Delete</button>
+        <button
+          type="submit"
+          className="rounded-md border border-neutral-800 bg-transparent px-3 py-1.5 text-[13px] text-neutral-500 transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
+        >
+          Delete
+        </button>
       </form>
     );
   };
 
   return (
     <AnonAuthProvider>
-      <div>
-        <div>
-          <h1>{board.title}</h1>
+      <div className="mx-auto max-w-200 px-5 py-10">
+        <div className="mb-12">
+          <h1 className="mb-2 text-4xl font-bold tracking-tight">
+            {board.title}
+          </h1>
+          <p className="text-[15px] text-neutral-500">Anonymous board</p>
         </div>
-        <div>
-          {posts && !posts.length
-            ? "No posts yet!"
-            : posts?.map((post) => {
-                const userOwnsPost =
-                  user?.id === post.user_id || user?.id === board.owner_id;
 
-                return (
-                  <div key={post.id}>
-                    <div>{post.content}</div>
-                    <div>{post.anonymous_name}</div>
+        <div className="mb-12">
+          {posts && !posts.length ? (
+            <p className="text-neutral-500">No posts yet!</p>
+          ) : (
+            posts?.map((post) => {
+              const userOwnsPost =
+                user?.id === post.user_id || user?.id === board.owner_id;
+
+              return (
+                <div
+                  key={post.id}
+                  className="mb-4 rounded-xl border border-neutral-800 bg-neutral-900 p-6 transition-colors hover:border-neutral-700"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-neutral-400">
+                      {post.anonymous_name}
+                    </span>
                     {userOwnsPost && renderDeleteButton(post.id)}
-                    <VoteButtons
-                      postId={post.id}
-                      totalVotes={getVoteTotal(post.id)}
-                      currentVote={getUserVote(post.id)}
-                    />
                   </div>
-                );
-              })}
+                  <div className="mb-4 text-[15px] leading-relaxed text-neutral-200">
+                    {post.content}
+                  </div>
+                  <VoteButtons
+                    postId={post.id}
+                    totalVotes={getVoteTotal(post.id)}
+                    currentVote={getUserVote(post.id)}
+                  />
+                </div>
+              );
+            })
+          )}
         </div>
-        <form action={createPost}>
-          <label htmlFor="newPost">Post Title:</label>
-          <input type="text" id="newPost" name="newPost" required />
-          <button type="submit">Create Post</button>
-        </form>
+
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+          <h3 className="mb-4 text-lg font-semibold">Post Anonymously</h3>
+          <form action={createPost}>
+            <textarea
+              id="newPost"
+              name="newPost"
+              required
+              placeholder="Share your thoughts..."
+              className="min-h-30 w-full resize-y rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 text-[15px] text-white transition-colors focus:border-neutral-600 focus:bg-neutral-900 focus:outline-none"
+            />
+            <div className="mt-4 flex justify-end">
+              <button
+                type="submit"
+                className="rounded-lg bg-white px-6 py-2.5 text-[15px] font-medium text-neutral-950 transition-colors hover:bg-neutral-200"
+              >
+                Post
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </AnonAuthProvider>
   );
