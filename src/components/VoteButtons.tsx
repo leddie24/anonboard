@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { useToastStore } from "@/stores/toastStore";
 import React from "react";
 
 export default function VoteButtons({
@@ -15,44 +16,32 @@ export default function VoteButtons({
   const [voteCount, setVoteCount] = React.useState(totalVotes);
   const [userVote, setUserVote] = React.useState<number | null>(currentVote);
 
+  const addToast = useToastStore((state) => state.addToast);
+
   const handleVote = async (vote: 1 | -1) => {
     const supabase = await createClient();
-    // Already voted
-    if (userVote === vote) {
-      setUserVote(null);
-      setVoteCount((prev) => prev - vote);
-      await supabase.from("votes").delete().eq("post_id", postId);
-    } else {
-      // Hasn't voted yet
-      if (!userVote) {
-        setUserVote(vote);
-        setVoteCount((prev) => prev + vote);
 
-        const { error } = await supabase
-          .from("votes")
-          .insert({ post_id: postId, value: vote });
+    const newVote = userVote === vote ? null : vote;
+    const delta = userVote === vote ? -vote : !userVote ? vote : 2 * vote;
 
-        if (error) {
-          setUserVote(null);
-          setVoteCount((prev) => prev - vote);
-        }
-      } else {
-        // Already voted
-        setVoteCount((prev) => prev + 2 * vote);
-        setUserVote(vote);
-        const { error } = await supabase
+    setUserVote(newVote);
+    setVoteCount((prev) => prev + delta);
+
+    const { error } = newVote
+      ? await supabase
           .from("votes")
           .upsert(
             { post_id: postId, value: vote },
             { onConflict: "post_id,user_id" },
-          );
-
-        if (error) {
-          console.log(error.message);
-          setVoteCount((prev) => prev - 2 * vote);
-          return;
-        }
-      }
+          )
+      : await supabase.from("votes").delete().eq("post_id", postId);
+    if (error) {
+      addToast({
+        type: "error",
+        message: "Vote failed, please try again",
+      });
+      setUserVote(userVote);
+      setVoteCount((prev) => prev - delta);
     }
   };
 

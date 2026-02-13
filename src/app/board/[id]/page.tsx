@@ -1,4 +1,5 @@
 import AnonAuthProvider from "@/components/AnonAuthProvider";
+import DeleteButton, { DeleteResult } from "@/components/DeleteButton";
 import VoteButtons from "@/components/VoteButtons";
 import { generateAnonName } from "@/lib/generateAnonName";
 import { createClient } from "@/lib/supabase/server";
@@ -57,14 +58,14 @@ export default async function BoardPage({
       .single();
 
     if (error) {
-      console.log(error.message);
+      console.error(error.message);
       return;
     }
 
     revalidatePath(`/board/${id}`);
   }
 
-  async function deletePost(formData: FormData) {
+  async function deletePost(formData: FormData): Promise<DeleteResult> {
     "use server";
 
     const supabase = await createClient();
@@ -72,10 +73,11 @@ export default async function BoardPage({
     const { error } = await supabase.from("posts").delete().eq("id", postId);
 
     if (error) {
-      console.log(error.message);
-      return;
+      console.error(error.message);
+      return { success: false, error: error.message };
     }
     revalidatePath(`/board/${id}`);
+    return { success: true };
   }
 
   const getVoteTotal = (postId: string) => {
@@ -90,20 +92,6 @@ export default async function BoardPage({
     return (
       votes?.find((v) => v.post_id === postId && v.user_id === user?.id)
         ?.value ?? null
-    );
-  };
-
-  const renderDeleteButton = (postId: string) => {
-    return (
-      <form action={deletePost}>
-        <input type="hidden" value={postId} name="postId" readOnly />
-        <button
-          type="submit"
-          className="rounded-md border border-neutral-800 bg-transparent px-3 py-1.5 text-[13px] text-neutral-500 transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
-        >
-          Delete
-        </button>
-      </form>
     );
   };
 
@@ -141,7 +129,9 @@ export default async function BoardPage({
                     <span className="text-sm font-semibold text-neutral-400">
                       {post.anonymous_name}
                     </span>
-                    {userOwnsPost && renderDeleteButton(post.id)}
+                    {userOwnsPost && (
+                      <DeleteButton postId={post.id} deletePost={deletePost} />
+                    )}
                   </div>
                   <div className="mb-4 text-[15px] leading-relaxed text-neutral-200">
                     {post.content}

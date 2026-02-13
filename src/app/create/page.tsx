@@ -1,8 +1,14 @@
+import CreateBoardForm, {
+  CreateBoardResult,
+} from "@/components/CreateBoardForm";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export default function CreateBoard() {
-  async function createBoard(formData: FormData) {
+  async function createBoard(
+    prevState: CreateBoardResult | null,
+    formData: FormData,
+  ): Promise<CreateBoardResult> {
     "use server";
 
     const supabase = await createClient();
@@ -14,8 +20,11 @@ export default function CreateBoard() {
       .single();
 
     if (error) {
-      console.log(error.message);
-      return;
+      console.error(error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
 
     redirect(`/board/${data.id}`);
@@ -28,29 +37,7 @@ export default function CreateBoard() {
           Create a Board
         </h1>
 
-        <form action={createBoard}>
-          <div className="mb-5">
-            <label
-              htmlFor="title"
-              className="mb-2 block text-sm font-medium text-neutral-400"
-            >
-              Board Title
-            </label>
-            <input
-              id="title"
-              name="title"
-              required
-              placeholder="e.g., Tech Discussions, Random Thoughts..."
-              className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 text-[15px] text-white transition-colors focus:border-neutral-600 focus:bg-neutral-900 focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            className="mt-6 w-full rounded-lg bg-white px-6 py-3 text-[15px] font-medium text-neutral-950 transition-colors hover:bg-neutral-200"
-          >
-            Create Board
-          </button>
-        </form>
+        <CreateBoardForm createBoard={createBoard} />
       </div>
     </div>
   );
