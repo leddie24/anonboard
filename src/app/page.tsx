@@ -1,10 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
 export default async function Home() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const { data: boardsData } = user
+    ? await supabase.from("boards").select().eq("owner_id", user.id)
+    : {};
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -23,8 +28,36 @@ export default async function Home() {
         >
           Create a board
         </a>
+        {user && (
+          <div className="mt-16 flex w-full flex-col">
+            <div className="mb-6 flex w-full items-center gap-4">
+              <div className="h-px flex-1 bg-neutral-800" />
+              <span className="text-sm text-neutral-500">Your Boards</span>
+              <div className="h-px flex-1 bg-neutral-800" />
+            </div>
 
-        <div className="mt-40 flex w-full flex-col">
+            {boardsData?.length ? (
+              <div className="flex flex-col gap-3">
+                {boardsData.map((board) => (
+                  <Link
+                    key={board.id}
+                    href={`/board/${board.id}`}
+                    className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900 px-6 py-4 transition-colors hover:border-neutral-700 hover:bg-neutral-800"
+                  >
+                    <span className="font-medium">{board.title}</span>
+                    <span className="text-sm text-neutral-500">&rarr;</span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-sm text-neutral-500">
+                No boards yet. Create your first one!
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="mt-20 flex w-full flex-col">
           <div className="mb-8 flex w-full items-center gap-4">
             <div className="h-px flex-1 bg-neutral-800" />
             <span className="text-sm text-neutral-500">How it works</span>
