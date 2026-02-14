@@ -5,6 +5,7 @@ import { generateAnonName } from "@/lib/generateAnonName";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
+import { renderDateTime } from "@/lib/formatDate";
 
 export default async function BoardPage({
   params,
@@ -129,18 +130,24 @@ export default async function BoardPage({
                     <span className="text-sm font-semibold text-neutral-400">
                       {post.anonymous_name}
                     </span>
-                    {userOwnsPost && (
-                      <DeleteButton postId={post.id} deletePost={deletePost} />
-                    )}
+                    <span className="text-sm font-semibold text-neutral-400">
+                      {renderDateTime(post.created_at)}
+                    </span>
                   </div>
                   <div className="mb-4 text-[15px] leading-relaxed text-neutral-200">
                     {post.content}
                   </div>
-                  <VoteButtons
-                    postId={post.id}
-                    totalVotes={getVoteTotal(post.id)}
-                    currentVote={getUserVote(post.id)}
-                  />
+                  <div className="flex justify-between">
+                    <VoteButtons
+                      postId={post.id}
+                      totalVotes={getVoteTotal(post.id)}
+                      currentVote={getUserVote(post.id)}
+                    />
+
+                    {userOwnsPost && (
+                      <DeleteButton postId={post.id} deletePost={deletePost} />
+                    )}
+                  </div>
                 </div>
               );
             })

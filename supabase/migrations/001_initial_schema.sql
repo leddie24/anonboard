@@ -75,3 +75,38 @@ create policy "votes: user can update own vote"
 
 create policy "votes: user can delete own vote"
   on votes for delete using (auth.uid() = user_id);
+
+-- ============================================================
+-- COMMENTS (nested, Reddit-style soft delete)
+-- ============================================================
+
+create table comments (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid references posts(id) on delete cascade not null,
+  parent_id uuid references comments(id),
+  content text not null,
+  anonymous_name text not null,
+  user_id uuid references auth.users(id) default auth.uid() not null,
+  is_deleted boolean default false,
+  created_at timestamptz default now()
+);
+
+alter table comments enable row level security;
+
+-- Comments: anyone can read, signed-in users can create,
+-- comment author or board owner can soft-delete (update)
+create policy "comments: anyone can read"
+  on comments for select using (true);
+
+create policy "comments: signed-in users can create"
+  on comments for insert with check (auth.uid() = user_id);
+
+create policy "comments: author or board owner can update"
+  on comments for update using (
+    auth.uid() = user_id
+    or auth.uid() = (
+      select b.owner_id from boards b
+      join posts p on p.board_id = b.id
+      where p.id = post_id
+    )
+  );
