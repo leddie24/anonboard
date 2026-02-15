@@ -10,12 +10,12 @@ interface ICommentThreadProps {
   comment: CommentNode;
   boardId: string;
   userId: string | null;
-  board_owner_id: string;
+  boardOwnerId: string;
   level?: number;
 }
 
 export default function CommentThread(props: ICommentThreadProps) {
-  const { comment, boardId, userId, board_owner_id, level = 0 } = props;
+  const { comment, boardId, userId, boardOwnerId, level = 0 } = props;
   const [collapseThread, setCollapseThread] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
@@ -53,9 +53,11 @@ export default function CommentThread(props: ICommentThreadProps) {
       <ActionBar
         isDeleted={comment.is_deleted ?? false}
         onReplyClick={handleReply}
-        childCommentsSize={comment.children.length}
         isCollapsed={collapseThread}
         onCollapse={handleCollapse}
+        boardId={boardId}
+        comment={comment}
+        showDelete={userId === comment.user_id || userId === boardOwnerId}
       />
       <CommentForm
         boardId={boardId}
@@ -72,7 +74,7 @@ export default function CommentThread(props: ICommentThreadProps) {
               comment={child}
               boardId={boardId}
               userId={userId}
-              board_owner_id={board_owner_id}
+              boardOwnerId={boardOwnerId}
               level={level + 1}
             />
           );

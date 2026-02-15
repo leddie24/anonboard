@@ -35,7 +35,7 @@ export async function createPost(
 }
 
 export async function deletePost(
-  id: string,
+  boardId: string,
   formData: FormData,
 ): Promise<DeleteResult> {
   const supabase = await createClient();
@@ -46,7 +46,7 @@ export async function deletePost(
     console.error(error.message);
     return { success: false, error: error.message };
   }
-  revalidatePath(`/board/${id}`);
+  revalidatePath(`/board/${boardId}`);
   return { success: true };
 }
 
@@ -80,6 +80,23 @@ export async function createComment(
   if (error) {
     console.error(error.message);
     return;
+  }
+  revalidatePath(`/board/${boardId}`);
+}
+
+export async function softDeleteComment(
+  boardId: string,
+  commentId: string,
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("comments")
+    .update({ is_deleted: true })
+    .match({ id: commentId });
+
+  if (error) {
+    console.error(error.message);
   }
   revalidatePath(`/board/${boardId}`);
 }

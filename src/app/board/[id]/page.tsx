@@ -1,13 +1,9 @@
 import AnonAuthProvider from "@/components/AnonAuthProvider";
-import DeleteButton from "@/components/DeleteButton";
-import VoteButtons from "@/components/VoteButtons";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { renderDateTime } from "@/lib/formatDate";
-import { createPost, deletePost } from "@/lib/actions";
+import { createPost } from "@/lib/actions";
 import { buildCommentTree } from "@/lib/buildCommentTree";
-import CommentThread from "@/components/CommentThread";
-import CommentForm from "@/components/CommentForm";
+import PostCard from "@/components/PostCard";
 
 export default async function BoardPage({
   params,
@@ -31,7 +27,8 @@ export default async function BoardPage({
   const { data: posts, error: postsError } = await supabase
     .from("posts")
     .select()
-    .eq("board_id", boardId);
+    .eq("board_id", boardId)
+    .order("created_at", { ascending: true });
 
   if (boardError) {
     notFound();
@@ -46,7 +43,8 @@ export default async function BoardPage({
   const { data: comments } = await supabase
     .from("comments")
     .select()
-    .in("post_id", postIds);
+    .in("post_id", postIds)
+    .order("created_at", { ascending: true });
 
   const getPostComments = (postId: string) => {
     const postComments = comments?.filter((c) => c.post_id === postId) ?? [];
@@ -90,58 +88,20 @@ export default async function BoardPage({
             <p className="text-neutral-500">No posts yet!</p>
           ) : (
             posts?.map((post) => {
-              const userOwnsPost =
-                user?.id === post.user_id || user?.id === board.owner_id;
-
+              const voteTotal = getVoteTotal(post.id);
+              const currentVote = getUserVote(post.id);
               const commentTree = getPostComments(post.id);
 
               return (
-                <div
+                <PostCard
                   key={post.id}
-                  className="mb-4 rounded-xl border border-neutral-800 bg-neutral-900 p-6 transition-colors hover:border-neutral-700"
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-neutral-400">
-                      {post.anonymous_name}
-                    </span>
-                    <span className="text-sm font-semibold text-neutral-400">
-                      {renderDateTime(post.created_at)}
-                    </span>
-                  </div>
-                  <div className="mb-4 text-[15px] leading-relaxed text-neutral-200">
-                    {post.content}
-                  </div>
-                  <div className="flex justify-between">
-                    <VoteButtons
-                      postId={post.id}
-                      totalVotes={getVoteTotal(post.id)}
-                      currentVote={getUserVote(post.id)}
-                    />
-
-                    {userOwnsPost && (
-                      <DeleteButton
-                        postId={post.id}
-                        deletePost={deletePost.bind(null, boardId)}
-                      />
-                    )}
-                  </div>
-                  <div className="mt-4 border-t border-neutral-800 pt-4">
-                    <CommentForm boardId={boardId} postId={post.id} />
-                    {commentTree.length > 0 && (
-                      <div className="mt-3">
-                        {commentTree.map((commentTreeItem) => (
-                          <CommentThread
-                            key={commentTreeItem.id}
-                            comment={commentTreeItem}
-                            boardId={board.id}
-                            userId={user?.id ?? null}
-                            board_owner_id={board.owner_id}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  post={post}
+                  board={board}
+                  user={user}
+                  commentTree={commentTree}
+                  voteTotal={voteTotal}
+                  currentVote={currentVote}
+                />
               );
             })
           )}

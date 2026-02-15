@@ -1,9 +1,16 @@
+"use client";
+
+import { softDeleteComment } from "@/lib/actions";
+import { CommentNode } from "@/lib/buildCommentTree";
+
 interface IActionBarProps {
   onReplyClick: () => void;
   onCollapse: () => void;
-  childCommentsSize: number;
+  comment: CommentNode;
   isCollapsed: boolean;
   isDeleted: boolean;
+  showDelete: boolean;
+  boardId: string;
 }
 
 export default function ActionBar(props: IActionBarProps) {
@@ -12,7 +19,9 @@ export default function ActionBar(props: IActionBarProps) {
     isDeleted,
     onReplyClick,
     onCollapse,
-    childCommentsSize,
+    comment,
+    showDelete,
+    boardId,
   } = props;
 
   return (
@@ -27,15 +36,25 @@ export default function ActionBar(props: IActionBarProps) {
         </button>
       )}
 
-      {childCommentsSize > 0 && (
+      {comment.children.length > 0 && (
         <button
           type="button"
           onClick={onCollapse}
           className="mt-1 text-xs text-neutral-500 transition-colors hover:text-neutral-300"
         >
           {isCollapsed
-            ? `Show ${childCommentsSize} child comments`
+            ? `Show ${comment.children.length} child comments`
             : "Hide child comments"}
+        </button>
+      )}
+
+      {showDelete && !comment.is_deleted && (
+        <button
+          type="button"
+          onClick={async () => await softDeleteComment(boardId, comment.id)}
+          className="mt-1 text-xs text-neutral-500 transition-colors hover:text-neutral-300"
+        >
+          Delete
         </button>
       )}
     </div>
