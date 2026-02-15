@@ -15,10 +15,26 @@ export default function CommentThread(props: ICommentThreadProps) {
   const { comment, board_id, user_id, board_owner_id, level = 0 } = props;
 
   return (
-    <div>
-      <div>{comment.anonymous_name}</div>
-      <div>{renderDateTime(comment.created_at!)}</div>
-      <div>{comment.is_deleted ? "[deleted]" : comment.content}</div>
+    <div
+      className={`mt-3 border-l-2 border-neutral-700/50 pl-4${
+        level === 0 ? " pt-3" : ""
+      }`}
+    >
+      <div className="mb-1 flex items-center gap-2">
+        <span className="text-xs font-semibold text-neutral-400">
+          {comment.is_deleted ? "[deleted]" : comment.anonymous_name}
+        </span>
+        <span className="text-xs text-neutral-500">
+          {renderDateTime(comment.created_at)}
+        </span>
+      </div>
+      <p className="text-sm leading-relaxed text-neutral-300">
+        {comment.is_deleted ? (
+          <span className="italic text-neutral-500">[deleted]</span>
+        ) : (
+          comment.content
+        )}
+      </p>
       {comment.children.map((child) => {
         return (
           <CommentThread

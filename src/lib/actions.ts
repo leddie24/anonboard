@@ -7,18 +7,22 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { generateAnonName } from "@/lib/generateAnonName";
 import { DeleteResult } from "@/components/DeleteButton";
-export async function createPost(id: string, formData: FormData) {
+
+export async function createPost(
+  boardId: string,
+  formData: FormData,
+): Promise<void> {
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
-  const anonymousName = generateAnonName(user.id, id);
+  const anonymousName = generateAnonName(user.id, boardId);
   const content = formData.get("newPost") as string;
   const { error } = await supabase
     .from("posts")
-    .insert({ board_id: id, content, anonymous_name: anonymousName })
+    .insert({ board_id: boardId, content, anonymous_name: anonymousName })
     .select()
     .single();
 
@@ -27,7 +31,7 @@ export async function createPost(id: string, formData: FormData) {
     return;
   }
 
-  revalidatePath(`/board/${id}`);
+  revalidatePath(`/board/${boardId}`);
 }
 
 export async function deletePost(
@@ -44,4 +48,38 @@ export async function deletePost(
   }
   revalidatePath(`/board/${id}`);
   return { success: true };
+}
+
+export async function createComment(
+  boardId: string,
+  formData: FormData,
+): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+  const anonymousName = generateAnonName(user.id, boardId);
+
+  const content = formData.get("newComment") as string;
+  const postId = formData.get("postId") as string;
+  const parentId = (formData.get("parentId") as string) ?? null;
+
+  const { error } = await supabase
+    .from("comments")
+    .insert({
+      post_id: postId,
+      parent_id: parentId,
+      content,
+      anonymous_name: anonymousName,
+    })
+    .select()
+    .single();
+  if (error) {
+    console.error(error.message);
+    return;
+  }
+  revalidatePath(`/board/${boardId}`);
 }

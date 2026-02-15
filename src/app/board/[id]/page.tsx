@@ -5,16 +5,16 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { renderDateTime } from "@/lib/formatDate";
 import { createPost, deletePost } from "@/lib/actions";
-import { Tables } from "@/lib/database.types";
 import { buildCommentTree } from "@/lib/buildCommentTree";
 import CommentThread from "@/components/CommentThread";
+import CommentForm from "@/components/CommentForm";
 
 export default async function BoardPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id: boardId } = await params;
 
   const supabase = await createClient();
 
@@ -25,13 +25,13 @@ export default async function BoardPage({
   const { data: board, error: boardError } = await supabase
     .from("boards")
     .select()
-    .eq("id", id)
+    .eq("id", boardId)
     .single();
 
   const { data: posts, error: postsError } = await supabase
     .from("posts")
     .select()
-    .eq("board_id", id);
+    .eq("board_id", boardId);
 
   if (boardError) {
     notFound();
@@ -121,21 +121,26 @@ export default async function BoardPage({
                     {userOwnsPost && (
                       <DeleteButton
                         postId={post.id}
-                        deletePost={deletePost.bind(null, id)}
+                        deletePost={deletePost.bind(null, boardId)}
                       />
                     )}
                   </div>
-                  {commentTree.map((commentTreeItem) => {
-                    return (
-                      <CommentThread
-                        key={commentTreeItem.id}
-                        comment={commentTreeItem}
-                        board_id={board.id}
-                        user_id={user?.id ?? null}
-                        board_owner_id={board.owner_id}
-                      />
-                    );
-                  })}
+                  <div className="mt-4 border-t border-neutral-800 pt-4">
+                    <CommentForm boardId={boardId} postId={post.id} />
+                    {commentTree.length > 0 && (
+                      <div className="mt-3">
+                        {commentTree.map((commentTreeItem) => (
+                          <CommentThread
+                            key={commentTreeItem.id}
+                            comment={commentTreeItem}
+                            board_id={board.id}
+                            user_id={user?.id ?? null}
+                            board_owner_id={board.owner_id}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })
@@ -144,7 +149,7 @@ export default async function BoardPage({
 
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
           <h3 className="mb-4 text-lg font-semibold">Post Anonymously</h3>
-          <form action={createPost.bind(null, id)}>
+          <form action={createPost.bind(null, boardId)}>
             <textarea
               id="newPost"
               name="newPost"
