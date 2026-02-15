@@ -133,8 +133,8 @@ export default async function BoardPage({
                           <CommentThread
                             key={commentTreeItem.id}
                             comment={commentTreeItem}
-                            board_id={board.id}
-                            user_id={user?.id ?? null}
+                            boardId={board.id}
+                            userId={user?.id ?? null}
                             board_owner_id={board.owner_id}
                           />
                         ))}
