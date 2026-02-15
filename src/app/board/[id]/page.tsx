@@ -1,11 +1,13 @@
 import AnonAuthProvider from "@/components/AnonAuthProvider";
-import DeleteButton, { DeleteResult } from "@/components/DeleteButton";
+import DeleteButton from "@/components/DeleteButton";
 import VoteButtons from "@/components/VoteButtons";
-import { generateAnonName } from "@/lib/generateAnonName";
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import { renderDateTime } from "@/lib/formatDate";
+import { createPost, deletePost } from "@/lib/actions";
+import { Tables } from "@/lib/database.types";
+import { buildCommentTree } from "@/lib/buildCommentTree";
+import CommentThread from "@/components/CommentThread";
 
 export default async function BoardPage({
   params,
@@ -41,45 +43,15 @@ export default async function BoardPage({
     .select()
     .in("post_id", postIds);
 
-  async function createPost(formData: FormData) {
-    "use server";
+  const { data: comments } = await supabase
+    .from("comments")
+    .select()
+    .in("post_id", postIds);
 
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const anonymousName = generateAnonName(user.id, id);
-    const content = formData.get("newPost") as string;
-    const { error } = await supabase
-      .from("posts")
-      .insert({ board_id: id, content, anonymous_name: anonymousName })
-      .select()
-      .single();
-
-    if (error) {
-      console.error(error.message);
-      return;
-    }
-
-    revalidatePath(`/board/${id}`);
-  }
-
-  async function deletePost(formData: FormData): Promise<DeleteResult> {
-    "use server";
-
-    const supabase = await createClient();
-    const postId = formData.get("postId") as string;
-    const { error } = await supabase.from("posts").delete().eq("id", postId);
-
-    if (error) {
-      console.error(error.message);
-      return { success: false, error: error.message };
-    }
-    revalidatePath(`/board/${id}`);
-    return { success: true };
-  }
+  const getPostComments = (postId: string) => {
+    const postComments = comments?.filter((c) => c.post_id === postId) ?? [];
+    return buildCommentTree(postComments);
+  };
 
   const getVoteTotal = (postId: string) => {
     return (
@@ -121,6 +93,8 @@ export default async function BoardPage({
               const userOwnsPost =
                 user?.id === post.user_id || user?.id === board.owner_id;
 
+              const commentTree = getPostComments(post.id);
+
               return (
                 <div
                   key={post.id}
@@ -145,9 +119,23 @@ export default async function BoardPage({
                     />
 
                     {userOwnsPost && (
-                      <DeleteButton postId={post.id} deletePost={deletePost} />
+                      <DeleteButton
+                        postId={post.id}
+                        deletePost={deletePost.bind(null, id)}
+                      />
                     )}
                   </div>
+                  {commentTree.map((commentTreeItem) => {
+                    return (
+                      <CommentThread
+                        key={commentTreeItem.id}
+                        comment={commentTreeItem}
+                        board_id={board.id}
+                        user_id={user?.id ?? null}
+                        board_owner_id={board.owner_id}
+                      />
+                    );
+                  })}
                 </div>
               );
             })
@@ -156,7 +144,7 @@ export default async function BoardPage({
 
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
           <h3 className="mb-4 text-lg font-semibold">Post Anonymously</h3>
-          <form action={createPost}>
+          <form action={createPost.bind(null, id)}>
             <textarea
               id="newPost"
               name="newPost"
