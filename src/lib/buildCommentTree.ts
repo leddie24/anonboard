@@ -21,3 +21,33 @@ export const buildCommentTree = (commentArr: Tables<"comments">[]) => {
 
   return roots;
 };
+
+export type CommentVotesMap = Map<string, { total: number; userVote?: number }>;
+
+export const buildCommentVotesMap = (
+  commentVotes: Tables<"comment_votes">[],
+  userId: string,
+) => {
+  const voteMap: CommentVotesMap = new Map();
+
+  for (const commentVote of commentVotes) {
+    if (voteMap.has(commentVote.comment_id)) {
+      const current = voteMap.get(commentVote.comment_id);
+      voteMap.set(commentVote.comment_id, {
+        total: current!.total + commentVote.value,
+        userVote:
+          current?.userVote === undefined && userId === commentVote.user_id
+            ? commentVote.value
+            : current?.userVote,
+      });
+    } else {
+      voteMap.set(commentVote.comment_id, {
+        total: commentVote.value,
+        userVote:
+          userId === commentVote.user_id ? commentVote.value : undefined,
+      });
+    }
+  }
+
+  return voteMap;
+};

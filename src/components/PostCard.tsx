@@ -6,19 +6,28 @@ import DeleteButton from "./DeleteButton";
 import VoteButtons from "./VoteButtons";
 import { Tables } from "@/lib/database.types";
 import { User } from "@supabase/supabase-js";
-import { CommentNode } from "@/lib/buildCommentTree";
+import { CommentNode, CommentVotesMap } from "@/lib/buildCommentTree";
 
 interface IPostCardProps {
   post: Tables<"posts">;
   user: User | null;
   commentTree: CommentNode[];
+  commentVoteMap: CommentVotesMap;
   voteTotal: number;
   currentVote: number | null;
   board: Tables<"boards">;
 }
 
 export default function PostCard(props: IPostCardProps) {
-  const { post, board, user, voteTotal, commentTree, currentVote } = props;
+  const {
+    post,
+    commentVoteMap,
+    board,
+    user,
+    voteTotal,
+    commentTree,
+    currentVote,
+  } = props;
 
   const userOwnsPost = user?.id === post.user_id || user?.id === board.owner_id;
 
@@ -40,9 +49,10 @@ export default function PostCard(props: IPostCardProps) {
       </div>
       <div className="flex justify-between">
         <VoteButtons
-          postId={post.id}
+          id={post.id}
           totalVotes={voteTotal}
           currentVote={currentVote}
+          tableName="votes"
         />
 
         {userOwnsPost && (
@@ -55,10 +65,11 @@ export default function PostCard(props: IPostCardProps) {
       <div className="mt-4 border-t border-neutral-800 pt-4">
         <CommentForm boardId={board.id} postId={post.id} />
         {commentTree.length > 0 && (
-          <div className="mt-3">
+          <div className="mt-3 -ml-3">
             {commentTree.map((commentTreeItem) => (
               <CommentThread
                 key={commentTreeItem.id}
+                commentVoteMap={commentVoteMap}
                 comment={commentTreeItem}
                 boardId={board.id}
                 userId={user?.id ?? null}

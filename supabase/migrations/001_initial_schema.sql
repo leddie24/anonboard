@@ -30,6 +30,7 @@ create table votes (
   unique (post_id, user_id)
 );
 
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
@@ -110,3 +111,28 @@ create policy "comments: author or board owner can update"
       where p.id = post_id
     )
   );
+
+create table comment_votes (
+  id uuid primary key default gen_random_uuid(),
+  comment_id uuid references comments(id) on delete cascade not null,
+  user_id uuid default auth.uid(),
+  value integer not null check (value in (-1, 1)),
+  created_at timestamptz default now(),
+  unique (comment_id, user_id)
+);
+
+alter table comment_votes enable row level security;
+
+-- Comment votes: anyone can read, signed-in users can vote,
+-- users can update or delete their own votes
+create policy "comment_votes: anyone can read"
+  on comment_votes for select using (true);
+
+create policy "comment_votes: signed-in users can create"
+  on comment_votes for insert with check (auth.uid() = user_id);
+
+create policy "comment_votes: user can update own vote"
+  on comment_votes for update using (auth.uid() = user_id);
+
+create policy "comment_votes: user can delete own vote"
+  on comment_votes for delete using (auth.uid() = user_id);

@@ -25,12 +25,12 @@ export default function ActionBar(props: IActionBarProps) {
   } = props;
 
   return (
-    <div className="flex mb-4 gap-4">
+    <div className="flex gap-4 items-center">
       {!isDeleted && (
         <button
           type="button"
           onClick={onReplyClick}
-          className="mt-1 text-xs text-neutral-500 transition-colors hover:text-neutral-300"
+          className="text-xs text-neutral-500 transition-colors hover:text-neutral-300"
         >
           Reply
         </button>
@@ -40,7 +40,7 @@ export default function ActionBar(props: IActionBarProps) {
         <button
           type="button"
           onClick={onCollapse}
-          className="mt-1 text-xs text-neutral-500 transition-colors hover:text-neutral-300"
+          className="text-xs text-neutral-500 transition-colors hover:text-neutral-300"
         >
           {isCollapsed
             ? `Show ${comment.children.length} child comments`
@@ -52,7 +52,7 @@ export default function ActionBar(props: IActionBarProps) {
         <button
           type="button"
           onClick={async () => await softDeleteComment(boardId, comment.id)}
-          className="mt-1 text-xs text-neutral-500 transition-colors hover:text-neutral-300"
+          className="text-xs text-neutral-500 transition-colors hover:text-neutral-300"
         >
           Delete
         </button>

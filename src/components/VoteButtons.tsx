@@ -5,13 +5,15 @@ import { useToastStore } from "@/stores/toastStore";
 import React from "react";
 
 export default function VoteButtons({
-  postId,
+  id,
   totalVotes,
   currentVote,
+  tableName,
 }: {
-  postId: string;
+  id: string;
   totalVotes: number;
   currentVote: number | null;
+  tableName: "votes" | "comment_votes";
 }) {
   const [voteCount, setVoteCount] = React.useState(totalVotes);
   const [userVote, setUserVote] = React.useState<number | null>(currentVote);
@@ -27,14 +29,30 @@ export default function VoteButtons({
     setUserVote(newVote);
     setVoteCount((prev) => prev + delta);
 
-    const { error } = newVote
-      ? await supabase
-          .from("votes")
-          .upsert(
-            { post_id: postId, value: vote },
-            { onConflict: "post_id,user_id" },
-          )
-      : await supabase.from("votes").delete().eq("post_id", postId);
+    let error;
+
+    if (tableName === "votes") {
+      const { error: voteError } = newVote
+        ? await supabase
+            .from(tableName)
+            .upsert(
+              { post_id: id, value: vote },
+              { onConflict: "post_id,user_id" },
+            )
+        : await supabase.from(tableName).delete().eq("post_id", id);
+      error = voteError;
+    } else {
+      const { error: voteError } = newVote
+        ? await supabase
+            .from(tableName)
+            .upsert(
+              { comment_id: id, value: vote },
+              { onConflict: "comment_id,user_id" },
+            )
+        : await supabase.from(tableName).delete().eq("comment_id", id);
+      error = voteError;
+    }
+
     if (error) {
       addToast({
         type: "error",
@@ -46,31 +64,31 @@ export default function VoteButtons({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="inline-flex items-stretch overflow-hidden rounded-full border border-neutral-500/40 bg-neutral-900/60">
       <button
         type="button"
         onClick={() => handleVote(1)}
-        className={`rounded-md border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+        className={`flex items-center px-2.5 text-xs transition-colors ${
           userVote === 1
-            ? "border-white/30 bg-white/10 text-white"
-            : "border-neutral-800 bg-transparent text-neutral-400 hover:border-neutral-600 hover:bg-neutral-950 hover:text-white"
+            ? "text-green-400 bg-green-400/15"
+            : "text-neutral-400 hover:text-neutral-200 hover:bg-white/10"
         }`}
       >
-        +1
+        ▲
       </button>
-      <span className="min-w-8 text-center text-sm font-semibold text-white">
+      <span className="flex items-center justify-center min-w-6 border-x border-neutral-500/40 px-3 text-center text-xs font-semibold text-neutral-200">
         {voteCount}
       </span>
       <button
         type="button"
         onClick={() => handleVote(-1)}
-        className={`rounded-md border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+        className={`flex items-center px-2.5 text-xs transition-colors ${
           userVote === -1
-            ? "border-white/30 bg-white/10 text-white"
-            : "border-neutral-800 bg-transparent text-neutral-400 hover:border-neutral-600 hover:bg-neutral-950 hover:text-white"
+            ? "text-red-400 bg-red-400/15"
+            : "text-neutral-400 hover:text-neutral-200 hover:bg-white/10"
         }`}
       >
-        -1
+        ▼
       </button>
     </div>
   );

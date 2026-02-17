@@ -2,7 +2,7 @@ import AnonAuthProvider from "@/components/AnonAuthProvider";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { createPost } from "@/lib/actions";
-import { buildCommentTree } from "@/lib/buildCommentTree";
+import { buildCommentTree, buildCommentVotesMap } from "@/lib/buildCommentTree";
 import PostCard from "@/components/PostCard";
 
 export default async function BoardPage({
@@ -46,6 +46,13 @@ export default async function BoardPage({
     .in("post_id", postIds)
     .order("created_at", { ascending: true });
 
+  const commentIds = comments?.map((comment) => comment.id) ?? [];
+
+  const { data: commentVotes } = await supabase
+    .from("comment_votes")
+    .select()
+    .in("comment_id", commentIds);
+
   const getPostComments = (postId: string) => {
     const postComments = comments?.filter((c) => c.post_id === postId) ?? [];
     return buildCommentTree(postComments);
@@ -65,6 +72,11 @@ export default async function BoardPage({
         ?.value ?? null
     );
   };
+
+  const commentVotesMap = buildCommentVotesMap(
+    commentVotes ?? [],
+    user?.id ?? "",
+  );
 
   return (
     <AnonAuthProvider>
@@ -99,6 +111,7 @@ export default async function BoardPage({
                   board={board}
                   user={user}
                   commentTree={commentTree}
+                  commentVoteMap={commentVotesMap}
                   voteTotal={voteTotal}
                   currentVote={currentVote}
                 />
