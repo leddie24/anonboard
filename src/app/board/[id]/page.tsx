@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createPost } from "@/lib/actions";
 import { buildCommentTree, buildCommentVotesMap } from "@/lib/buildCommentTree";
 import PostCard from "@/components/PostCard";
+import { generateAnonName } from "@/lib/generateAnonName";
 
 export default async function BoardPage({
   params,
@@ -78,6 +79,8 @@ export default async function BoardPage({
     user?.id ?? "",
   );
 
+  const anonymous_name = generateAnonName(user!.id, boardId);
+
   return (
     <AnonAuthProvider>
       <div className="mx-auto max-w-200 px-5 py-10">
@@ -86,9 +89,12 @@ export default async function BoardPage({
             {board.title}
           </h1>
           <p className="text-[15px] text-neutral-500">Anonymous board</p>
+          <p className="text-sm">
+            Posting as <span className="font-bold">{anonymous_name}</span>
+          </p>
         </div>
 
-        <div className="mb-12">
+        <div className="mb-8">
           {postsError ? (
             <div
               role="alert"
